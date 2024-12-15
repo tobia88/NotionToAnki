@@ -2,11 +2,16 @@ import os
 import httpx
 from typing import Any, Dict, Optional
 from anki import create_anki_deck
+import configparser
+
+config = configparser.ConfigParser()
+config.read('config.ini')
 
 NOTION_API_URL = 'https://api.notion.com/v1/databases'
 NOTION_VERSION = '2022-06-28'
-TOKEN = os.getenv('NOTION_API_KEY')
-DATABASE_ID = '1211b625758a80a797b1ca073dbed135'
+TOKEN = config['notion']['token']
+DATABASE_ID = config['notion']['database_id']
+TARGET_LANGUAGE = config['notion']['language']
 IMAGES_DIR = 'images'
 
 def get_vocabs() -> None:
@@ -30,7 +35,7 @@ def get_vocabs() -> None:
     vocab_list_results = result_dict.get('results', [])
     vocab_list = []
     for result in vocab_list_results:
-        vocab = map_notion_result_to_vocabulary(result, 'English')
+        vocab = map_notion_result_to_vocabulary(result, TARGET_LANGUAGE)
         if vocab:
             vocab_list.append(vocab)
 

@@ -167,3 +167,6 @@ cython_debug/
 
 # ignore images
 images/
+
+# ignore config file
+config.ini
