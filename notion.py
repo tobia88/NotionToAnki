@@ -5,7 +5,7 @@ from anki import create_anki_deck
 
 NOTION_API_URL = 'https://api.notion.com/v1/databases'
 NOTION_VERSION = '2022-06-28'
-TOKEN = 'ntn_E73508755305Xf1iIYOjZsGWHjPoI3db63rlC1gfy9A3UL'
+TOKEN = os.getenv('NOTION_API_KEY')
 DATABASE_ID = '1211b625758a80a797b1ca073dbed135'
 IMAGES_DIR = 'images'
 
@@ -43,6 +43,8 @@ def map_notion_result_to_vocabulary(result: Dict[str, Any], target_language: str
 
     if language != target_language:
         return None
+
+    print(f"Processing vocabulary: {name}")
 
     meaning_rich_text = properties.get('Meaning', {}).get('rich_text', [])
     if not meaning_rich_text:
@@ -97,9 +99,22 @@ def download_image(url: str, name: str) -> None:
     if not os.path.exists(IMAGES_DIR):
         os.makedirs(IMAGES_DIR)
 
-    response = httpx.get(url)
-    response.raise_for_status()
-
     image_path = os.path.join(IMAGES_DIR, f"{name}.jpg")
-    with open(image_path, 'wb') as f:
-        f.write(response.content)
+    if os.path.exists(image_path):
+        print(f"Image already exists for: {name}, skipping download.")
+        return
+
+    print(f"Downloading image for: {name}")
+
+    with httpx.stream("GET", url) as response:
+        response.raise_for_status()
+        total = int(response.headers["Content-Length"])
+        with open(image_path, 'wb') as f:
+            downloaded = 0
+            for chunk in response.iter_bytes():
+                f.write(chunk)
+                downloaded += len(chunk)
+                percentage = (downloaded / total) * 100
+                print(f"Downloading {name}: {percentage:.2f}% complete", end='\r')
+
+    print(f"\nImage saved to: {image_path}")
