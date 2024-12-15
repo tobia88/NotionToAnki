@@ -1,4 +1,4 @@
-
+import os
 import httpx
 from typing import Any, Dict, Optional
 from anki import create_anki_deck
@@ -7,6 +7,7 @@ NOTION_API_URL = 'https://api.notion.com/v1/databases'
 NOTION_VERSION = '2022-06-28'
 TOKEN = 'ntn_E73508755305Xf1iIYOjZsGWHjPoI3db63rlC1gfy9A3UL'
 DATABASE_ID = '1211b625758a80a797b1ca073dbed135'
+IMAGES_DIR = 'images'
 
 def get_vocabs() -> None:
     url = f'{NOTION_API_URL}/{DATABASE_ID}/query'
@@ -36,7 +37,6 @@ def get_vocabs() -> None:
     create_anki_deck(vocab_list)
 
 def map_notion_result_to_vocabulary(result: Dict[str, Any], target_language: str) -> Optional[Dict[str, Any]]:
-    # ...existing code...
     properties = result.get('properties', {})
     name = properties.get('Name', {}).get('title', [{}])[0].get('text', {}).get('content', '')
     language = properties.get('Language', {}).get('select', {}).get('name', '')
@@ -69,6 +69,11 @@ def map_notion_result_to_vocabulary(result: Dict[str, Any], target_language: str
 
     root = properties.get('Root', {}).get('formula', {}).get('string', '')
 
+    illustration_url = properties.get('Illustration', {}).get('files', [{}])[0].get('file', {}).get('url', '')
+
+    if illustration_url:
+        download_image(illustration_url, name)
+
     return {
         'name': name,
         'language': language,
@@ -87,3 +92,14 @@ def map_notion_result_to_vocabulary(result: Dict[str, Any], target_language: str
         'compare_meaning_3': compare_meaning_3,
         'root': root
     }
+
+def download_image(url: str, name: str) -> None:
+    if not os.path.exists(IMAGES_DIR):
+        os.makedirs(IMAGES_DIR)
+
+    response = httpx.get(url)
+    response.raise_for_status()
+
+    image_path = os.path.join(IMAGES_DIR, f"{name}.jpg")
+    with open(image_path, 'wb') as f:
+        f.write(response.content)
