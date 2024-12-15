@@ -22,7 +22,7 @@ TEMPLATES = [
 		'name': 'Card 1',
 		'qfmt': (
 			'<style>'
-			'.card { font-family: Arial, sans-serif; font-size: 24px; text-align: center; color: #ddd; background-color: #333; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }'
+			'.card { font-family: Arial, sans-serif; font-size: 24px; text-align: center; color: #ddd; background-color: #222; padding: 20px; border-radius: 10px; rgba(0, 0, 0, 0.1); }'
 			'.name { font-size: 28px; font-weight: bold; color: #fff; }'
 			'</style>'
 			'<div class="card">'
