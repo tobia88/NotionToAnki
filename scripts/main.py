@@ -2,6 +2,7 @@ from notion import get_vocabs
 from anki import create_anki_deck
 from utils import download_image
 
+
 def notion_to_anki_deck() -> None:
     vocab_list: list = get_vocabs()
 

@@ -13,7 +13,7 @@ with open('config.yaml') as f:
     config = yaml.safe_load(f)
 
 DECK_NAME = config_loader.anki.output_deck_name
-PACKAGE_NAME = f'{config_loader.anki.output_package_name}.apkg'
+PACKAGE_NAME = f'{config_loader.output_dir}\\{config_loader.anki.output_package_name}.apkg'
 
 def create_anki_deck(vocab_list: list) -> None:
     my_model = genanki.Model(
@@ -45,3 +45,7 @@ def create_anki_deck(vocab_list: list) -> None:
     package.write_to_file(PACKAGE_NAME)
 
     print(f"Anki deck '{DECK_NAME}' has been exported to '{PACKAGE_NAME}'")
+
+
+if __name__ == '__main__':
+    print(PACKAGE_NAME)

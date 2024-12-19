@@ -1,4 +1,5 @@
 import yaml
+import os
 
 class AnkiConfigData:
     output_deck_name: str
@@ -22,6 +23,7 @@ class ConfigLoader:
     language: str
     anki: AnkiConfigData
     openai: OpenAIConfigData
+    output_dir: str
 
     def __init__(self):
         self.load_config()
@@ -41,6 +43,12 @@ class ConfigLoader:
 
         self.anki = AnkiConfigData(self.config[language_lower]['anki'])
         self.openai = OpenAIConfigData(self.config[language_lower]['openai'])
+        self.output_dir = f'output\\{language_lower}'
 
 
 config_loader = ConfigLoader()
+
+# ensure output directory exists
+os.makedirs(config_loader.output_dir, exist_ok=True)
+
+# os.system(f'explorer {config_loader.output_dir}')

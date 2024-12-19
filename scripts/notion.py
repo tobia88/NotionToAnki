@@ -1,6 +1,7 @@
 import os
 import httpx
 import configparser
+from config_loader import config_loader
 from dotenv import load_dotenv
 
 config = configparser.ConfigParser()
@@ -12,7 +13,7 @@ NOTION_API_URL = 'https://api.notion.com/v1/databases'
 NOTION_VERSION = '2022-06-28'
 TOKEN = os.environ.get('NOTION_API_KEY')
 DATABASE_ID = os.environ.get('NOTION_DATABASE_ID')
-TARGET_LANGUAGE = config['notion']['language']
+TARGET_LANGUAGE = config_loader.language
 NOTION_QUERY_URL = f"{NOTION_API_URL}/{DATABASE_ID}/query"
 NOTION_API_HEADERS = {
     "Authorization": f"Bearer {TOKEN}",
