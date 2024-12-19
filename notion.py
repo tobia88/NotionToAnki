@@ -1,20 +1,22 @@
 import os
 import httpx
 from typing import Any, Dict, Optional
-from anki import create_anki_deck
 import configparser
+from dotenv import load_dotenv
 
 config = configparser.ConfigParser()
 config.read('config.ini')
 
+load_dotenv()
+
 NOTION_API_URL = 'https://api.notion.com/v1/databases'
 NOTION_VERSION = '2022-06-28'
-TOKEN = config['notion']['token']
-DATABASE_ID = config['notion']['database_id']
+TOKEN = os.environ.get('NOTION_API_KEY')
+DATABASE_ID = os.environ.get('NOTION_DATABASE_ID')
 TARGET_LANGUAGE = config['notion']['language']
 IMAGES_DIR = 'images'
 
-def get_vocabs() -> None:
+def get_vocabs() -> list:
     url = f'{NOTION_API_URL}/{DATABASE_ID}/query'
     headers = {
         "Authorization": f"Bearer {TOKEN}",
@@ -39,7 +41,9 @@ def get_vocabs() -> None:
         if vocab:
             vocab_list.append(vocab)
 
-    create_anki_deck(vocab_list)
+    return vocab_list
+
+
 
 def map_notion_result_to_vocabulary(result: Dict[str, Any], target_language: str) -> Optional[Dict[str, Any]]:
     properties = result.get('properties', {})
@@ -76,7 +80,8 @@ def map_notion_result_to_vocabulary(result: Dict[str, Any], target_language: str
 
     root = properties.get('Root', {}).get('formula', {}).get('string', '')
 
-    illustration_url = properties.get('Illustration', {}).get('files', [{}])[0].get('file', {}).get('url', '')
+    files = properties.get('Illustration', {}).get('files', [])
+    illustration_url = files[0].get('file', {}).get('url', '') if files else ''
 
     if illustration_url:
         download_image(illustration_url, name)
@@ -123,3 +128,7 @@ def download_image(url: str, name: str) -> None:
                 print(f"Downloading {name}: {percentage:.2f}% complete", end='\r')
 
     print(f"\nImage saved to: {image_path}")
+
+
+if __name__ == "__main__":
+    get_vocabs()
