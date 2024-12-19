@@ -2,8 +2,7 @@ from notion import get_vocabs
 from anki import create_anki_deck
 from utils import download_image
 
-
-def main() -> None:
+def notion_to_anki_deck() -> None:
     vocab_list: list = get_vocabs()
 
     # download images if image url is valid
@@ -12,6 +11,10 @@ def main() -> None:
             download_image(vocab['illustration_url'], vocab['name'])
 
     create_anki_deck(vocab_list)
+
+
+def main() -> None:
+    notion_to_anki_deck()
 
 
 if __name__ == "__main__":
