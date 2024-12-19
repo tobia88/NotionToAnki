@@ -1,6 +1,5 @@
 import os
 import httpx
-from typing import Any, Dict, Optional
 import configparser
 from dotenv import load_dotenv
 
@@ -14,7 +13,6 @@ NOTION_VERSION = '2022-06-28'
 TOKEN = os.environ.get('NOTION_API_KEY')
 DATABASE_ID = os.environ.get('NOTION_DATABASE_ID')
 TARGET_LANGUAGE = config['notion']['language']
-IMAGES_DIR = 'images'
 
 def get_vocabs() -> list:
     url = f'{NOTION_API_URL}/{DATABASE_ID}/query'
@@ -44,8 +42,7 @@ def get_vocabs() -> list:
     return vocab_list
 
 
-
-def map_notion_result_to_vocabulary(result: Dict[str, Any], target_language: str) -> Optional[Dict[str, Any]]:
+def map_notion_result_to_vocabulary(result, target_language):
     properties = result.get('properties', {})
     name = properties.get('Name', {}).get('title', [{}])[0].get('text', {}).get('content', '')
     language = properties.get('Language', {}).get('select', {}).get('name', '')
@@ -56,6 +53,7 @@ def map_notion_result_to_vocabulary(result: Dict[str, Any], target_language: str
     print(f"Processing vocabulary: {name}")
 
     meaning_rich_text = properties.get('Meaning', {}).get('rich_text', [])
+
     if not meaning_rich_text:
         return None
 
@@ -83,9 +81,6 @@ def map_notion_result_to_vocabulary(result: Dict[str, Any], target_language: str
     files = properties.get('Illustration', {}).get('files', [])
     illustration_url = files[0].get('file', {}).get('url', '') if files else ''
 
-    if illustration_url:
-        download_image(illustration_url, name)
-
     return {
         'name': name,
         'language': language,
@@ -102,32 +97,9 @@ def map_notion_result_to_vocabulary(result: Dict[str, Any], target_language: str
         'compare_meaning_2': compare_meaning_2,
         'compare_word_3': compare_word_3,
         'compare_meaning_3': compare_meaning_3,
-        'root': root
+        'root': root,
+        'illustration_url': illustration_url
     }
-
-def download_image(url: str, name: str) -> None:
-    if not os.path.exists(IMAGES_DIR):
-        os.makedirs(IMAGES_DIR)
-
-    image_path = os.path.join(IMAGES_DIR, f"{name}.jpg")
-    if os.path.exists(image_path):
-        print(f"Image already exists for: {name}, skipping download.")
-        return
-
-    print(f"Downloading image for: {name}")
-
-    with httpx.stream("GET", url) as response:
-        response.raise_for_status()
-        total = int(response.headers["Content-Length"])
-        with open(image_path, 'wb') as f:
-            downloaded = 0
-            for chunk in response.iter_bytes():
-                f.write(chunk)
-                downloaded += len(chunk)
-                percentage = (downloaded / total) * 100
-                print(f"Downloading {name}: {percentage:.2f}% complete", end='\r')
-
-    print(f"\nImage saved to: {image_path}")
 
 
 if __name__ == "__main__":
