@@ -1,12 +1,19 @@
 import genanki
 from anki_config import FIELDS, TEMPLATES
+from config_loader import config_loader
 import os
-import configparser
+# import configparser
 
-config = configparser.ConfigParser()
-config.read('config.ini')
+import yaml
 
-DECK_NAME = config['anki']['deck_name']
+# config = configparser.ConfigParser()
+# config.read('config.ini')
+
+with open('config.yaml') as f:
+    config = yaml.safe_load(f)
+
+DECK_NAME = config_loader.anki.output_deck_name
+PACKAGE_NAME = f'{config_loader.anki.output_package_name}.apkg'
 
 def create_anki_deck(vocab_list: list) -> None:
     my_model = genanki.Model(
@@ -35,6 +42,6 @@ def create_anki_deck(vocab_list: list) -> None:
 
     package = genanki.Package(my_deck)
     package.media_files = [f"images/{vocab['name']}.jpg" for vocab in vocab_list if os.path.exists(f"images/{vocab['name']}.jpg")]
-    package.write_to_file('output.apkg')
+    package.write_to_file(PACKAGE_NAME)
 
-    print(f"Anki deck '{DECK_NAME}' has been exported to 'output.apkg'")
+    print(f"Anki deck '{DECK_NAME}' has been exported to '{PACKAGE_NAME}'")

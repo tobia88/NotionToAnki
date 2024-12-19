@@ -1,3 +1,6 @@
 genanki
 python-dotenv
 httpx
+openai
+pydantic
+pyYAML
