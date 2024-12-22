@@ -1,13 +1,9 @@
 import genanki
 from anki_config import FIELDS, TEMPLATES
 from config_loader import config_loader
-import os
-# import configparser
-
+import utils
 import yaml
 
-# config = configparser.ConfigParser()
-# config.read('config.ini')
 
 with open('config.yaml') as f:
     config = yaml.safe_load(f)
@@ -28,20 +24,31 @@ def create_anki_deck(vocab_list: list) -> None:
         DECK_NAME
     )
 
+    media_file_paths = []
     for vocab in vocab_list:
+        img_src = utils.get_image_url(vocab['id'])
+
+        anki_fields =[
+            vocab['name'], vocab['meaning'], vocab['sentence_1'], vocab['translation_1'],
+            vocab['sentence_2'], vocab['translation_2'], vocab['sentence_3'], vocab['translation_3'],
+            vocab['compare_word_1'], vocab['compare_meaning_1'], vocab['compare_word_2'], vocab['compare_meaning_2'],
+            vocab['compare_word_3'], vocab['compare_meaning_3'], vocab['root'], f"<img src='{img_src}'>",
+            str(vocab['rate_of_use'])
+        ]
+
+        print(f"Anki:::Creating note for {vocab['name']}")
+
+        if img_src:
+            media_file_paths.append(utils.get_absolute_image_url(vocab['id']))
+
         my_note = genanki.Note(
             model=my_model,
-            fields=[
-                vocab['name'], vocab['meaning'], vocab['sentence_1'], vocab['translation_1'],
-                vocab['sentence_2'], vocab['translation_2'], vocab['sentence_3'], vocab['translation_3'],
-                vocab['compare_word_1'], vocab['compare_meaning_1'], vocab['compare_word_2'], vocab['compare_meaning_2'],
-                vocab['compare_word_3'], vocab['compare_meaning_3'], vocab['root'], f"<img src='{vocab['name']}.jpg'>"
-            ]
+            fields=anki_fields
         )
         my_deck.add_note(my_note)
 
     package = genanki.Package(my_deck)
-    package.media_files = [f"images/{vocab['name']}.jpg" for vocab in vocab_list if os.path.exists(f"images/{vocab['name']}.jpg")]
+    package.media_files = media_file_paths
     package.write_to_file(PACKAGE_NAME)
 
     print(f"Anki deck '{DECK_NAME}' has been exported to '{PACKAGE_NAME}'")

@@ -1,11 +1,8 @@
 import os
 import httpx
-import configparser
 from config_loader import config_loader
 from dotenv import load_dotenv
-
-config = configparser.ConfigParser()
-config.read('config.ini')
+import utils
 
 load_dotenv()
 
@@ -20,6 +17,22 @@ NOTION_API_HEADERS = {
     "Content-Type": "application/json",
     "Notion-Version": NOTION_VERSION
 }
+
+
+def get_response(query_data: dict) -> any:
+    try:
+        response = httpx.post(NOTION_QUERY_URL, headers=NOTION_API_HEADERS, json=query_data)
+        response.raise_for_status()
+
+    except httpx.HTTPStatusError as err:
+        print(f"Notion:::HTTP error occurred: {err}")
+        return
+
+    except Exception as err:
+        print(f"Notion:::An error occurred: {err}")
+        return
+
+    return response.json()
 
 
 def get_empty_meaning_entries() -> list[dict[str, any]]:
@@ -42,27 +55,45 @@ def get_empty_meaning_entries() -> list[dict[str, any]]:
         }
     }
 
-    try:
-        response = httpx.post(NOTION_QUERY_URL, headers=NOTION_API_HEADERS, json=query_data)
-        response.raise_for_status()
-
-    except httpx.HTTPStatusError as err:
-        print(f"HTTP error occurred: {err}")
-        return []
-
-    except Exception as err:
-        print(f"An error occurred: {err}")
-        return []
-
-    data = response.json()
+    data = get_response(query_data)
     entries = [{"id": result["id"], "name": result["properties"]["Name"]["title"][0]["text"]["content"]} for result in data["results"]]
     if entries:
         for entry in entries:
-            print(f"Empty meaning entry found: {entry['name']}")
+            print(f"Notion:::Empty meaning entry found: {entry['name']}")
     else:
-        print("No empty meaning entries found.")
+        print("Notion:::No empty meaning entries found.")
 
     return entries
+
+
+def get_empty_illustration_entries() -> any:
+    query_data = {
+        "filter": {
+            "and": [
+                {
+                    "property": "Language",
+                    "select": {
+                        "equals": TARGET_LANGUAGE
+                    }
+                },
+                {
+                    "property": "Meaning",
+                    "rich_text": {
+                        "is_not_empty": True
+                    }
+                },
+                {
+                    "property": "Illustration",
+                    "files": {
+                        "is_empty": True
+                    }
+                }
+            ]
+        }
+    }
+
+    data = get_response(query_data)
+    return data
 
 
 def get_vocabs() -> list:
@@ -90,28 +121,28 @@ def get_vocabs() -> list:
         response.raise_for_status()
 
     except httpx.HTTPStatusError as err:
-        print(f"HTTP error occurred: {err}")
+        print(f"Notion:::HTTP error occurred: {err}")
         return
 
     except Exception as err:
-        print(f"An error occurred: {err}")
+        print(f"Notion:::An error occurred: {err}")
         return
 
     result_dict = response.json()
     vocab_list_results = result_dict.get('results', [])
     vocab_list = []
     for result in vocab_list_results:
-        vocab = map_notion_result_to_vocabulary(result, TARGET_LANGUAGE)
+        vocab = map_notion_result_to_vocabulary(result)
         vocab_list.append(vocab)
 
     return vocab_list
 
 
-def map_notion_result_to_vocabulary(result, target_language):
+def map_notion_result_to_vocabulary(result: any) -> dict[str, str]:
     properties = result.get('properties', {})
     name = properties.get('Name', {}).get('title', [{}])[0].get('text', {}).get('content', '')
 
-    print(f"Processing vocabulary: {name}")
+    print(f"Notion:::Processing vocabulary: {name}")
 
     meaning = properties.get('Meaning', {}).get('rich_text', [])[0].get('text', {}).get('content', '')
     sentence_1 = properties.get('Sentence 1', {}).get('rich_text', [{}])[0].get('text', {}).get('content', '')
@@ -136,8 +167,10 @@ def map_notion_result_to_vocabulary(result, target_language):
 
     files = properties.get('Illustration', {}).get('files', [])
     illustration_url = files[0].get('file', {}).get('url', '') if files else ''
+    rate_of_use = properties.get('Rate of Usage', {}).get('select', {}).get('name', '')
 
     return {
+        'id': result['id'],
         'name': name,
         'language': TARGET_LANGUAGE,
         'meaning': meaning,
@@ -154,10 +187,44 @@ def map_notion_result_to_vocabulary(result, target_language):
         'compare_word_3': compare_word_3,
         'compare_meaning_3': compare_meaning_3,
         'root': root,
-        'illustration_url': illustration_url
+        'illustration_url': illustration_url,
+        'rate_of_use': rate_of_use
     }
+
+def update_notion_page(entry_id, data: dict):
+    headers = {
+        "Authorization": f"Bearer {TOKEN}",
+        "Content-Type": "application/json",
+        "Notion-Version": NOTION_VERSION
+    }
+
+    page_data = {
+        "properties": {
+            "Meaning": {"rich_text": [{"text": {"content": data["meaning"]}}]},
+            "Manual Root": {"rich_text": [{"text": {"content": data["manual_root"]}}]},
+            "Sentence 1": {"rich_text": [{"text": {"content": data["sentence_1"]}}]},
+            "Translation 1": {"rich_text": [{"text": {"content": data["translation_1"]}}]},
+            "Sentence 2": {"rich_text": [{"text": {"content": data["sentence_2"]}}]},
+            "Translation 2": {"rich_text": [{"text": {"content": data["translation_2"]}}]},
+            "Sentence 3": {"rich_text": [{"text": {"content": data["sentence_3"]}}]},
+            "Translation 3": {"rich_text": [{"text": {"content": data["translation_3"]}}]},
+            "Compare Word 1": {"rich_text": [{"text": {"content": data["compare_word_1"]}}]},
+            "Compare Meaning 1": {"rich_text": [{"text": {"content": data["compare_meaning_1"]}}]},
+            "Compare Word 2": {"rich_text": [{"text": {"content": data["compare_word_2"]}}]},
+            "Compare Meaning 2": {"rich_text": [{"text": {"content": data["compare_meaning_2"]}}]},
+            "Compare Word 3": {"rich_text": [{"text": {"content": data["compare_word_3"]}}]},
+            "Compare Meaning 3": {"rich_text": [{"text": {"content": data["compare_meaning_3"]}}]},
+            "Rate of Usage": {"select": {"name": data["rate_of_use"]}}
+        }
+    }
+
+    url = f"https://api.notion.com/v1/pages/{entry_id}"
+    response = httpx.patch(url, headers=headers, json=page_data)
+    response.raise_for_status()
+    return response.json()
 
 
 if __name__ == "__main__":
     get_empty_meaning_entries()
+    get_empty_illustration_entries()
     get_vocabs()

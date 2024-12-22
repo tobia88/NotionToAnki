@@ -1,7 +1,8 @@
 import os
 import httpx
+from config_loader import config_loader
 
-IMAGES_DIR = 'images'
+IMAGES_DIR =  config_loader.output_dir + '\\images'
 
 def download_image(url, name):
     if not os.path.exists(IMAGES_DIR):
@@ -26,3 +27,46 @@ def download_image(url, name):
                 print(f"Downloading {name}: {percentage:.2f}% complete", end='\r')
 
     print(f"\nImage saved to: {image_path}")
+
+
+def is_image_downloaded(id: str) -> bool:
+    """
+    Check if image is already downloaded by if the image name is starting with the id
+    """
+    is_exists = any(file_name.startswith(f"{id}_") for file_name in os.listdir(IMAGES_DIR))
+    return is_exists
+
+
+def get_absolute_image_url(id: str) -> str:
+    """
+    Get the absolute image url by the id
+    """
+    for file_name in os.listdir(IMAGES_DIR):
+        if file_name.startswith(f"{id}_"):
+            return os.path.join(IMAGES_DIR, file_name)
+
+    return None
+
+
+def get_all_downloaded_images_paths() -> list[str]:
+    """
+    Get all downloaded images
+    """
+    return [file_name for file_name in os.listdir(IMAGES_DIR)]
+
+
+def get_image_url(id: str) -> str:
+    """
+    Get the image url by the id
+    """
+    for file_name in os.listdir(IMAGES_DIR):
+        if file_name.startswith(f"{id}_"):
+            return file_name
+
+    return None
+
+
+if __name__ == "__main__":
+    paths = get_all_downloaded_images_paths()
+    for path in paths:
+        print(path)

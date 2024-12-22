@@ -14,7 +14,8 @@ FIELDS = [
     {'name': 'Compare Word 3'},
     {'name': 'Compare Meaning 3'},
     {'name': 'Root'},
-    {'name': 'Illustration'}
+    {'name': 'Illustration'},
+	{'name': 'Rate of Use'},
 ]
 
 TEMPLATES = [
@@ -24,9 +25,11 @@ TEMPLATES = [
             '<style>'
             '.card { font-family: Arial, sans-serif; font-size: 24px; text-align: center; color: #ddd; background-color: #222; padding: 20px; border-radius: 10px; rgba(0, 0, 0, 0.1); }'
             '.name { font-size: 28px; font-weight: bold; color: #fff; }'
+			'.rate { font-size: 20px; font-style: italic; color: #8e44ad; margin-bottom: 10px; }'
             '</style>'
             '<div class="card">'
             '<div class="name">{{Name}}</div>'
+			'<div class="rate">{{Rate of Use}}</div>'
             '</div>'
         ),
         'afmt': (

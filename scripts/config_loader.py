@@ -8,15 +8,17 @@ class AnkiConfigData:
     def __init__(self, config_data: any):
         self.output_deck_name = config_data['output_deck_name']
         self.output_package_name = config_data['output_package_name']
-        print(f'AnkiConfigData:::Output Deck Name: {self.output_deck_name}')
+        print(f'ConfigLoader:::AnkiConfigData:::Output Deck Name: {self.output_deck_name}')
 
 
 class OpenAIConfigData:
     prompt_system_content: str
+    prompt_image_format: str
 
     def __init__(self, config_data: any):
         self.prompt_system_content = config_data['prompt_system_content']
-        print('OpenAIConfigData:::Successfully loaded OpenAI config data')
+        self.prompt_image_format = config_data['prompt_image_format']
+        print('ConfigLoader:::OpenAIConfigData:::Successfully loaded OpenAI config data')
 
 
 class ConfigLoader:
@@ -33,7 +35,7 @@ class ConfigLoader:
             with open('config.yaml') as f:
                 self.config = yaml.safe_load(f)
         except FileNotFoundError:
-            print("File not found")
+            print("ConfigLoader:::File not found")
             return
 
         self.language: str = self.config['language']

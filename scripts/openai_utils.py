@@ -1,7 +1,8 @@
 from pydantic import BaseModel
 from openai import OpenAI
 from dotenv import load_dotenv
-import yaml
+from config_loader import config_loader
+import httpx
 
 import os
 
@@ -28,16 +29,7 @@ class VocabularyExtraction(BaseModel):
     compare_word_3: str
     compare_meaning_3: str
 
-def process_entries(entries):
-    sys_content = ""
-
-    try:
-        with open("system_prompt.txt", "r", encoding="utf-8") as file:
-            sys_content = yaml.safe_load(file)
-    except FileNotFoundError:
-        print("File not found")
-        return
-
+def interpret_vocabulary_items(entries: list) -> list:
     parsed_entries = []
     for entry in entries:
         response = client.beta.chat.completions.parse(
@@ -45,7 +37,7 @@ def process_entries(entries):
             messages=[
                 {
                     "role": "system",
-                    "content": sys_content
+                    "content": config_loader.openai.prompt_system_content
                 },
                 {
                     "role": "user",
@@ -63,6 +55,37 @@ def process_entries(entries):
     return parsed_entries
 
 
+def generate_images_url(entires: list, callback) -> list[dict[any]]:
+    """
+    return {'id': str, 'name': str, 'url': str}
+    """
+    url_list = []
+    for entry in entires:
+        prompt: str = config_loader.openai.prompt_image_format\
+            .replace('%name%', entry['name'])\
+            .replace('%meaning%', entry['meaning'])
+        try:
+            print (f"Generating image for {entry['name']} with prompt: {prompt}")
+            response = client.images.generate(
+                model="dall-e-3",
+                prompt=prompt,
+                n=1,
+                size="1024x1024",
+            )
+        except Exception as e:
+            print(f"Error generating image for {entry['name']}: {e}")
+            continue
+
+        output_image_path = f'{entry["id"]}_{entry["name"]}'
+
+        callback(response.data[0].url, output_image_path)
+        url_list.append({'id': entry['id'], 'name': entry['name'], 'url': response.data[0].url})
+        print(f"Generated image for {entry['name']} at {response.data[0].url}")
+
+    return url_list
+
+
 if __name__ == "__main__":
-    entries = []
-    process_entries(entries)
+    entries = [{'name':'test'}]
+    # interpret_vocabulary_items(entries)
+    generate_images_url(entries)
