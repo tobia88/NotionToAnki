@@ -4,6 +4,9 @@ from config_loader import config_loader
 
 IMAGES_DIR =  config_loader.output_dir + '\\images'
 
+if not os.path.exists(IMAGES_DIR):
+    os.makedirs(IMAGES_DIR)
+
 def download_image(url, name):
     if not os.path.exists(IMAGES_DIR):
         os.makedirs(IMAGES_DIR)

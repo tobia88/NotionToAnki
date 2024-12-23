@@ -29,9 +29,10 @@ class VocabularyExtraction(BaseModel):
     compare_word_3: str
     compare_meaning_3: str
 
-def interpret_vocabulary_items(entries: list) -> list:
+def interpret_vocabulary_items(entries: list, callback) -> list:
     parsed_entries = []
     for entry in entries:
+        print(f"Interpreting vocabulary item: {entry['name']}")
         response = client.beta.chat.completions.parse(
             model="gpt-4o-mini-2024-07-18",
             messages=[
@@ -50,7 +51,9 @@ def interpret_vocabulary_items(entries: list) -> list:
             top_p=1
         )
         parsed_message = response.choices[0].message.parsed
-        parsed_entries.append({"id": entry["id"], "parsed_message": parsed_message})
+        parsed_dict = {"id": entry["id"], "parsed_message": parsed_message.model_dump()}
+        callback(entry["id"], parsed_dict["parsed_message"])
+        parsed_entries.append(parsed_dict)
 
     return parsed_entries
 

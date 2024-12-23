@@ -8,7 +8,7 @@ def fill_empty_meaning_entries() -> None:
     empty_items: list = notion.get_empty_meaning_entries()
 
     if empty_items:
-        openai_utils.interpret_vocabulary_items(empty_items)
+        openai_utils.interpret_vocabulary_items(empty_items, callback=notion.update_notion_page)
 
 
 def fill_empty_illustration_entries() -> None:
@@ -38,7 +38,7 @@ def notion_to_anki_deck() -> None:
 
 def main() -> None:
     # fill_empty_meaning_entries()
-    # fill_empty_illustration_entries()
+    # fill_empty_illustration_entries() /* This cost too much money */
     notion_to_anki_deck()
 
 
