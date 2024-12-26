@@ -13,13 +13,21 @@ def fill_empty_meaning_entries() -> None:
 
 def fill_empty_illustration_entries() -> None:
     result: list = notion.get_empty_illustration_entries()
-    items = [{'id': result['id'],
-              'name': result["properties"]["Name"]["title"][0]["text"]["content"],
-              'meaning': result["properties"]["Meaning"]["rich_text"][0]["plain_text"]} for result in result["results"]]
+    items = \
+    [
+        {
+            'id': result['id'],
+            'name': notion.get_property_value(result['properties'], 'Name'),
+            'meaning': notion.get_property_value(result['properties'], 'Meaning'),
+            'sentence': notion.get_property_value(result['properties'], 'Sentence 1'),
+        }
+        for result in result["results"]
+    ]
 
     empty_items_without_images = [item for item in items if not utils.is_image_downloaded(item['id'])]
 
     if not empty_items_without_images:
+        print("All images are already downloaded")
         return
 
     openai_utils.generate_images_url(empty_items_without_images, callback=utils.download_image)
@@ -37,8 +45,8 @@ def notion_to_anki_deck() -> None:
 
 
 def main() -> None:
-    # fill_empty_meaning_entries()
-    # fill_empty_illustration_entries() /* This cost too much money */
+    fill_empty_meaning_entries()
+    fill_empty_illustration_entries()
     notion_to_anki_deck()
 
 

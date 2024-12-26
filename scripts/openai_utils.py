@@ -66,7 +66,9 @@ def generate_images_url(entires: list, callback) -> list[dict[any]]:
     for entry in entires:
         prompt: str = config_loader.openai.prompt_image_format\
             .replace('%name%', entry['name'])\
-            .replace('%meaning%', entry['meaning'])
+            .replace('%meaning%', entry['meaning'])\
+            .replace('%sentence%', entry['sentence'])
+
         try:
             print (f"Generating image for {entry['name']} with prompt: {prompt}")
             response = client.images.generate(

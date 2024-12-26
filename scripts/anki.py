@@ -11,6 +11,12 @@ with open('config.yaml') as f:
 DECK_NAME = config_loader.anki.output_deck_name
 PACKAGE_NAME = f'{config_loader.output_dir}\\{config_loader.anki.output_package_name}.apkg'
 
+# Define the model so we can use a custom guid
+class VocabularyNode(genanki.Note):
+  @property
+  def guid(self):
+    return genanki.guid_for(self.fields[0])
+
 def create_anki_deck(vocab_list: list) -> None:
     my_model = genanki.Model(
         1607392319,
@@ -29,6 +35,7 @@ def create_anki_deck(vocab_list: list) -> None:
         img_src = utils.get_image_url(vocab['id'])
 
         anki_fields =[
+            vocab['id'],
             vocab['name'], vocab['meaning'], vocab['sentence_1'], vocab['translation_1'],
             vocab['sentence_2'], vocab['translation_2'], vocab['sentence_3'], vocab['translation_3'],
             vocab['compare_word_1'], vocab['compare_meaning_1'], vocab['compare_word_2'], vocab['compare_meaning_2'],
@@ -41,7 +48,7 @@ def create_anki_deck(vocab_list: list) -> None:
         if img_src:
             media_file_paths.append(utils.get_absolute_image_url(vocab['id']))
 
-        my_note = genanki.Note(
+        my_note = VocabularyNode(
             model=my_model,
             fields=anki_fields
         )

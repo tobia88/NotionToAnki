@@ -1,5 +1,5 @@
 ---
-language: Malay
+language: English
 
 english:
   anki:
@@ -33,6 +33,7 @@ english:
 
         Vocabulary: %name%
         Meaning: %meaning%
+        Sentence: %sentence%
 
 malay:
   anki:
@@ -66,3 +67,4 @@ malay:
 
         Vocabulary: %name%
         Meaning: %meaning%
+        Sentence: %sentence%

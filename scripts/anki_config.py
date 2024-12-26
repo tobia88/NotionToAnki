@@ -1,4 +1,5 @@
 FIELDS = [
+	{'name': 'GUID'},
     {'name': 'Name'},
     {'name': 'Meaning'},
     {'name': 'Sentence 1'},
